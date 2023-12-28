@@ -574,6 +574,66 @@ class _FunctionTransport(Transport):
         return None
 
 
+class PubSubTransport(Transport):
+    """The default PubSub transport."""
+
+    def __init__(
+        self, options  # type: Dict[str, Any]
+    ):
+        # type: (...) -> None
+        Transport.__init__(self, options)
+        assert self.parsed_dsn is not None
+
+        # Initialize the PubSub client here
+        import base64
+
+        import google.auth
+        from google.auth.credentials import with_scopes_if_required
+        from google.auth.transport.requests import Request
+        from google.cloud import pubsub_v1
+
+        client_scopes = ["https://www.googleapis.com/auth/cloud-platform"]
+        creds = with_scopes_if_required(
+            credentials=google.auth.default()[0], scopes=client_scopes
+        )
+        creds.refresh(Request())
+        self.client = pubsub_v1.PublisherClient(credentials=creds)
+
+        # Parse the topic name from the DSN
+        # The structure of the pubsub DSN is:
+        # encoded_sentry_dsn@ps_project_id.ps_topic.pubsub/0
+        assert self.parsed_dsn.host.endswith(".pubsub"), "Invalid PubSub DSN"
+        self.sentry_dsn = base64.b64decode(self.parsed_dsn.public_key).decode("utf-8")
+        self.ps_project_id, self.ps_topic, _ = self.parsed_dsn.host.split(".")
+        self.topic_path = self.client.topic_path(
+            project=self.ps_project_id, topic=self.ps_topic
+        )
+
+    def capture_event(
+        self, event  # type: Event
+    ):
+        # type: (...) -> None
+        # Before sending the event to PubSub, we need to add the sentry DSN
+        event["sentry_dsn"] = self.sentry_dsn
+        # Publish the message
+        future = self.client.publish(self.topic_path, str(event).encode("utf-8"))
+
+        # Wait for the publish operation to complete
+        message_id = future.result()
+
+        logger.debug(
+            "Successfully send event to PubSub, type:%s level:%s event_id:%s project:%s topic:%s message_id:%s"
+            % (
+                event.get("type") or "null",
+                event.get("level") or "null",
+                event.get("event_id") or "null",
+                self.ps_project_id,
+                self.ps_topic,
+                message_id,
+            )
+        )
+
+
 def make_transport(options):
     # type: (Dict[str, Any]) -> Optional[Transport]
     ref_transport = options["transport"]

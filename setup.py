@@ -20,8 +20,8 @@ def get_file_text(file_name):
 
 
 setup(
-    name="sentry-sdk",
-    version="1.39.1",
+    name="sentry-sdk-pubsub",
+    version="1.39.1.1",
     author="Sentry Team and Contributors",
     author_email="hello@sentry.io",
     url="https://github.com/getsentry/sentry-python",
@@ -29,7 +29,7 @@ setup(
         "Documentation": "https://docs.sentry.io/platforms/python/",
         "Changelog": "https://github.com/getsentry/sentry-python/blob/master/CHANGELOG.md",
     },
-    description="Python client for Sentry (https://sentry.io)",
+    description="Python client for Sentry (https://sentry.io) with PubSub support",
     long_description=get_file_text("README.md"),
     long_description_content_type="text/markdown",
     packages=find_packages(exclude=("tests", "tests.*")),
@@ -55,6 +55,7 @@ setup(
         "django": ["django>=1.8"],
         "falcon": ["falcon>=1.4"],
         "fastapi": ["fastapi>=0.79.0"],
+        "google-cloud-pubsub": ["google-cloud-pubsub~=2.18.0"],
         "flask": ["flask>=0.11", "blinker>=1.1", "markupsafe"],
         "grpcio": ["grpcio>=1.21.1"],
         "httpx": ["httpx>=0.16.0"],

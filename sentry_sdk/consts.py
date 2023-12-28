@@ -292,7 +292,8 @@ class ClientConstructor(object):
         error_sampler=None,  # type: Optional[Callable[[Event, Hint], Union[float, bool]]]
         enable_db_query_source=False,  # type: bool
         db_query_source_threshold_ms=100,  # type: int
-        spotlight=None,  # type: Optional[Union[bool, str]]
+        spotlight=None,  # type: Optional[Union[bool, str]],
+        enable_pubsub=False,  # type: bool
     ):
         # type: (...) -> None
         pass
@@ -316,4 +317,4 @@ DEFAULT_OPTIONS = _get_default_options()
 del _get_default_options
 
 
-VERSION = "1.39.1"
+VERSION = "1.39.1.1"

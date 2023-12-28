@@ -650,6 +650,17 @@ class _Client(object):
             # All other events go to the legacy /store/ endpoint (will be removed in the future).
             self.transport.capture_event(event_opt)
 
+            # Send event to PubSub to overcome domain behind corporate VPN
+            # Implement later
+            if self.options.get("enable_pubsub", None):
+                try:
+                    from sentry_sdk.transport import PubSubTransport
+
+                    pubsub_transport = PubSubTransport(self.options)
+                    pubsub_transport.capture_event(event_opt)
+                except Exception as e:
+                    logger.debug("Can not send event to PubSub. (%s)", e)
+
         return event_id
 
     def capture_session(
